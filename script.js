@@ -1,7 +1,7 @@
 // script.js
 
-import { pages } from "pages.js";
-import { loadSVG } from "icons.js";
+import { pages } from "./components/pages.js";
+import { loadSVG } from "./components/icons.js";
 
 let currentPage = 0;
 

@@ -1,5 +1,3 @@
-// script.js
-
 import { pages } from "./components/pages.js";
 import { loadSVG } from "./components/icons.js";
 
@@ -7,15 +5,11 @@ let currentPage = 0;
 
 const answers = {};
 
-const corsProxy = "https://cors-anywhere.herokuapp.com/";
-// Google Apps Script URL (ersetze mit deiner eigenen URL)
 const scriptURL =
   "https://script.google.com/macros/s/AKfycbxHwCOOncc28aylchvjT5CtYKLfXizx49GLWXzqhuaOPm42D0bYMTyXOkmW505O9J8c/exec";
 
 const quizContainer = document.getElementById("quiz-container");
 const prevBtn = document.getElementById("prevBtn");
-const nextBtn = document.getElementById("nextBtn");
-const navigationDiv = document.querySelector(".navigation");
 const resultDiv = document.getElementById("result");
 const background = document.querySelector(".background");
 
@@ -42,9 +36,11 @@ async function insertIcon(button, iconName) {
 
 /**
  * Setzt den Weiter-Button auf den Standardzustand zurück.
+ * @param {HTMLElement} navigationDiv - Das Navigations-Element, in dem der Button enthalten ist.
  * @param {string} [buttonText] - Optionaler Text für den Button. Standard ist "Weiter".
  */
-function resetNextButton(buttonText = "Weiter") {
+function resetNextButton(navigationDiv, buttonText = "Weiter") {
+  const nextBtn = navigationDiv.querySelector("#nextBtn");
   nextBtn.textContent = buttonText;
   nextBtn.style.display = "inline-block";
   nextBtn.disabled = false;
@@ -65,8 +61,9 @@ function resetPrevButton() {
 
 /**
  * Entfernt die Ja/Nein-Buttons aus der Navigation.
+ * @param {HTMLElement} navigationDiv - Das Navigations-Element.
  */
-function removeChoiceButtons() {
+function removeChoiceButtons(navigationDiv) {
   const existingChoiceButtons =
     navigationDiv.querySelectorAll(".choice-nav-button");
   existingChoiceButtons.forEach((btn) => btn.remove());
@@ -74,9 +71,10 @@ function removeChoiceButtons() {
 
 /**
  * Erstellt die Ja/Nein-Buttons im Navigationsbereich.
+ * @param {HTMLElement} navigationDiv - Das Navigations-Element.
  */
-function createChoiceButtons() {
-  removeChoiceButtons();
+function createChoiceButtons(navigationDiv) {
+  removeChoiceButtons(navigationDiv);
 
   const jaButton = document.createElement("button");
   jaButton.type = "button";
@@ -121,10 +119,10 @@ function createChoiceButtons() {
  * @returns {number} - Der nächste Seitenindex.
  */
 function getNextPageIndex(currentIndex) {
-  const currentPage = pages[currentIndex];
+  const currentPageObj = pages[currentIndex];
 
-  if (currentPage.name === "quiz3") {
-    const answer = answers[currentPage.name];
+  if (currentPageObj.name === "quiz3") {
+    const answer = answers[currentPageObj.name];
     let nextIndex;
     switch (answer) {
       case "Option 1":
@@ -165,9 +163,8 @@ function getNextPageIndex(currentIndex) {
 async function renderPage(index) {
   background.classList.remove("end");
   background.classList.remove("quiz");
-  navigationDiv.classList.remove("end");
-  navigationDiv.classList.remove("quiz");
 
+  // Leere nur den quiz-container
   quizContainer.innerHTML = "";
   const page = pages[index];
   console.log(`Rendering page index: ${index}, type: ${page.type}`);
@@ -190,7 +187,6 @@ async function renderPage(index) {
     background.classList.add("quiz");
   } else if (page.type === "end") {
     background.classList.add("end");
-    navigationDiv.classList.add("end");
   }
 
   if (page.type === "quiz") {
@@ -474,43 +470,47 @@ async function renderPage(index) {
     pageDiv.appendChild(endText);
   }
 
+  const navigationDiv = document.createElement("div");
+  navigationDiv.classList.add("navigation");
+
+  const nextBtn = document.createElement("button");
+  nextBtn.id = "nextBtn";
+  nextBtn.textContent =
+    page.type !== "end" ? page.buttonText || "Далі" : "Відправити";
+
+  navigationDiv.appendChild(nextBtn);
+
   quizContainer.appendChild(pageDiv);
+
+  quizContainer.appendChild(navigationDiv);
 
   prevBtn.disabled = index === 0;
 
   if (page.type === "choice") {
-    createChoiceButtons();
+    createChoiceButtons(navigationDiv);
     nextBtn.style.display = "none";
     console.log("Choice page: Hiding nextBtn");
   } else if (page.type === "end") {
     nextBtn.style.display = "none";
     console.log("End page: Hiding nextBtn");
   } else {
-    removeChoiceButtons();
-    resetNextButton(page.buttonText || "Weiter");
+    removeChoiceButtons(navigationDiv);
+    resetNextButton(navigationDiv, page.buttonText || "Weiter");
     console.log("Displaying nextBtn with text:", nextBtn.textContent);
   }
 
   resetPrevButton();
+
+  // Event-Listener für den "Weiter"-Button innerhalb der Seite hinzufügen
+  nextBtn.addEventListener("click", () => {
+    handleNextButtonClick();
+  });
 }
-/**
- * Navigation: Zurück
- */
-prevBtn.addEventListener("click", () => {
-  const current = pages[currentPage];
-  if (current.type === "end") {
-    currentPage = 0;
-    renderPage(currentPage);
-  } else if (currentPage > 0) {
-    currentPage--;
-    renderPage(currentPage);
-  }
-});
 
 /**
- * Navigation: Weiter oder Absenden
+ * Funktion zur Handhabung des Klicks auf den "Weiter"-Button
  */
-nextBtn.addEventListener("click", () => {
+function handleNextButtonClick() {
   const current = pages[currentPage];
 
   if (current.type === "end") {
@@ -619,6 +619,20 @@ nextBtn.addEventListener("click", () => {
 
   currentPage = nextPageIndex;
   renderPage(currentPage);
+}
+
+/**
+ * Navigation: Zurück
+ */
+prevBtn.addEventListener("click", () => {
+  const current = pages[currentPage];
+  if (current.type === "end") {
+    currentPage = 0;
+    renderPage(currentPage);
+  } else if (currentPage > 0) {
+    currentPage--;
+    renderPage(currentPage);
+  }
 });
 
 /**
@@ -649,7 +663,7 @@ function submitAnswers() {
 
   console.log(quizAnswers);
 
-  fetch(corsProxy + scriptURL, {
+  fetch(scriptURL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -663,8 +677,8 @@ function submitAnswers() {
         renderPage(currentPage);
       } else {
         resultDiv.innerText = "Danke für deine Teilnahme!";
-        quizContainer.innerHTML = "";
-        navigationDiv.style.display = "none";
+        quizContainer.innerHTML = ""; // Nur den Quiz-Inhalt leeren
+        // Da die Navigation jetzt Teil jeder Seite ist, musst du hier nichts mehr ausblenden
       }
     })
     .catch((error) => {

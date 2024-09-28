@@ -6,7 +6,7 @@ let currentPage = 0;
 const answers = {};
 
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbzszdlo-s-rKfd5iNs4FAJNG3LvmnYZYVO6VFGniyVdC2j2KOQbAJyVGeq_p07a-iqX/exec";
+  "https://script.google.com/macros/s/AKfycbxvfAR8OacWnrayaGllcjHlCsrOnzXOMn5mtMzGfMBXqbafSAL-Ovi88ao1XuN6-MhK/exec";
 
 const quizContainer = document.getElementById("quiz-container");
 const prevBtn = document.getElementById("prevBtn");
@@ -493,6 +493,7 @@ async function renderPage(index) {
       slider.addEventListener("input", () => {
         amountDisplay.textContent = `${slider.value}${unit}`;
         setBackgroundSize(slider);
+        answers[page.name] = slider.value;
       });
 
       function setBackgroundSize(input) {
@@ -739,10 +740,12 @@ function submitAnswers() {
         }
       } else if (page.typeInput === "arbeitszeiten") {
         quizAnswers[page.name] = answers[page.name] || "";
-        if (answers[page.name] === "feste_zeiten") {
+        if (answers[page.name] === "З ___ до ___") {
           quizAnswers[`${page.name}_von`] = answers[`${page.name}_von`] || "";
           quizAnswers[`${page.name}_bis`] = answers[`${page.name}_bis`] || "";
         }
+      } else if (page.typeInput === "slider") {
+        quizAnswers[page.name] = answers[page.name] || "";
       }
     }
   });
@@ -786,11 +789,3 @@ function submitAnswers() {
 }
 
 renderPage(currentPage);
-
-fetch(scriptURL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: { q1: "abba" },
-});

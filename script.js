@@ -121,32 +121,34 @@ function createChoiceButtons(navigationDiv) {
 function getNextPageIndex(currentIndex) {
   const currentPageObj = pages[currentIndex];
 
-  if (currentPageObj.name === "quiz3") {
+  if (currentPageObj.name === "q3") {
     const answer = answers[currentPageObj.name];
     let nextIndex;
     switch (answer) {
-      case "Option 1":
-        nextIndex = pages.findIndex((page) => page.name === "quiz4a");
+      case "Так, але важко знайти виконавця":
+        nextIndex = pages.findIndex((page) => page.name === "q4a");
         break;
-      case "Option 2":
-        nextIndex = pages.findIndex((page) => page.name === "quiz4b");
+      case "Так, але вона поки не потребує виконання":
+        nextIndex = pages.findIndex((page) => page.name === "q4b");
         break;
-      case "Option 3":
-        nextIndex = pages.findIndex((page) => page.name === "quiz4c");
+      case "Так, але не хочу працювати з початківцями":
+        nextIndex = pages.findIndex((page) => page.name === "q4c");
         break;
       default:
-        nextIndex = pages.findIndex((page) => page.name === "quiz4d");
+        nextIndex = pages.findIndex((page) => page.name === "q4d");
         break;
     }
 
     if (nextIndex === -1) {
-      console.error(
-        `Seite mit name 'quiz4${answer.toLowerCase()}' nicht gefunden.`
-      );
+      console.error(`Страниця не знайдена`);
       return currentIndex + 1;
     }
 
     return nextIndex;
+  }
+
+  if (currentPageObj.name?.startsWith("q4")) {
+    return pages.findIndex((page) => page.name === "q5");
   }
 
   if (currentIndex < pages.length - 1) {
@@ -201,28 +203,87 @@ async function renderPage(index) {
       page.options.forEach((option) => {
         const label = document.createElement("label");
         label.classList.add("option-label");
+
         const input = document.createElement("input");
-        input.type = page.typeInput;
+        input.type = "radio";
         input.name = page.name;
         input.value = option;
         input.required = true;
 
-        if (answers[page.name] === option) {
+        // Überprüfen, ob die Option eine „Інша відповідь“ ist
+        const isOtherOption = option.startsWith("Інша відповідь:");
+
+        // Event Listener für den Radio-Button nur für "Інша відповідь"
+        if (isOtherOption) {
+          // Erstelle das Eingabefeld
+          const textInput = document.createElement("input");
+          textInput.type = "text";
+          textInput.name = `${page.name}_other`;
+          textInput.placeholder = "Введіть вашу відповідь...";
+
+          // Setze den gespeicherten Wert, falls vorhanden
+          if (answers[`${page.name}_other`]) {
+            textInput.value = answers[`${page.name}_other`];
+          } else {
+            textInput.disabled = true; // Deaktiviere das Eingabefeld standardmäßig
+          }
+
+          // Event Listener für das Eingabefeld
+          textInput.addEventListener("input", (event) => {
+            answers[`${page.name}_other`] = event.target.value.trim();
+          });
+
+          // Event Listener für den Radio-Button
+          input.addEventListener("change", () => {
+            const allLabels =
+              optionsContainer.querySelectorAll(".option-label");
+            allLabels.forEach((lbl) => lbl.classList.remove("selected"));
+            label.classList.add("selected");
+
+            // Aktiviere oder deaktiviere das Eingabefeld basierend auf der Auswahl
+            if (input.checked) {
+              textInput.disabled = false;
+              textInput.focus();
+            } else {
+              textInput.disabled = true;
+              textInput.value = "";
+              delete answers[`${page.name}_other`];
+            }
+          });
+
+          label.appendChild(input);
+          const staticText = option.split(":")[0] + ": ";
+          const span = document.createElement("span");
+          span.textContent = staticText;
+          span.appendChild(textInput);
+          label.appendChild(span);
+        } else {
+          // Event Listener für den Radio-Button ohne "Інша відповідь"
+          input.addEventListener("change", () => {
+            const allLabels =
+              optionsContainer.querySelectorAll(".option-label");
+            allLabels.forEach((lbl) => lbl.classList.remove("selected"));
+            label.classList.add("selected");
+          });
+
+          if (answers[page.name] === option) {
+            input.checked = true;
+            label.classList.add("selected");
+          }
+
+          label.appendChild(input);
+
+          const span = document.createElement("span");
+          span.textContent = option;
+
+          label.appendChild(span);
+        }
+
+        // Vorherige Überprüfung, ob die Option ausgewählt ist
+        if (!isOtherOption && answers[page.name] === option) {
           input.checked = true;
           label.classList.add("selected");
         }
-
-        label.appendChild(input);
-
-        const span = document.createElement("span");
-        span.textContent = option;
-        label.appendChild(span);
-
-        label.addEventListener("click", () => {
-          const allLabels = optionsContainer.querySelectorAll(".option-label");
-          allLabels.forEach((lbl) => lbl.classList.remove("selected"));
-          label.classList.add("selected");
-        });
 
         optionsContainer.appendChild(label);
       });
@@ -241,7 +302,7 @@ async function renderPage(index) {
         label.textContent = option + ": ";
 
         const input = document.createElement("input");
-        input.type = page.typeInput;
+        input.type = "text";
         input.name = `${page.name}_${option}`;
         input.id = `${page.name}_${option}`;
         input.value = answers[`${page.name}_${option}`] || "";
@@ -526,7 +587,19 @@ function handleNextButtonClick() {
         `input[name="${current.name}"]:checked`
       );
       if (selectedOption) {
-        answers[current.name] = selectedOption.value;
+        let value = selectedOption.value;
+
+        // Überprüfen, ob die ausgewählte Option eine „Інша відповідь“ ist
+        if (value.startsWith("Інша відповідь:")) {
+          const otherValue = answers[`${current.name}_other`] || "";
+          if (otherValue === "") {
+            alert("Введіть іншу відповідь");
+            return;
+          }
+          value = otherValue;
+        }
+
+        answers[current.name] = value;
 
         if (
           current.typeInput === "arbeitszeiten" &&
@@ -549,12 +622,11 @@ function handleNextButtonClick() {
             answers[`${current.name}_von`] = vonSelect.value;
             answers[`${current.name}_bis`] = bisSelect.value;
           } else {
-            alert("Bitte wähle gültige Zeiten aus.");
             return;
           }
         }
       } else {
-        alert("Bitte wähle eine Antwort aus.");
+        alert("Обери одну з відповідей");
         return;
       }
     } else if (current.typeInput === "text") {
@@ -643,7 +715,26 @@ function submitAnswers() {
   pages.forEach((page) => {
     if (page.type === "quiz" || page.type === "choice") {
       if (page.typeInput === "radio") {
-        quizAnswers[page.name] = answers[page.name] || "";
+        // Überprüfen, ob es eine „Інша відповідь“-Option gibt
+        const isOtherOption = page.options.some((option) =>
+          option.startsWith("Інша відповідь:")
+        );
+
+        if (isOtherOption) {
+          // Überprüfen, ob die andere Antwort ausgewählt wurde
+          if (answers[page.name] && page.options.includes(answers[page.name])) {
+            // Standardoption wurde ausgewählt
+            quizAnswers[page.name] = answers[page.name] || "";
+          } else if (answers[`${page.name}_other`]) {
+            // Andere Antwort wurde ausgewählt und ausgefüllt
+            quizAnswers[page.name] = answers[`${page.name}_other`];
+          } else {
+            quizAnswers[page.name] = "";
+          }
+        } else {
+          // Normale Radio-Optionen
+          quizAnswers[page.name] = answers[page.name] || "";
+        }
       } else if (page.typeInput === "text") {
         if (page.optionen && Array.isArray(page.optionen)) {
           page.optionen.forEach((option) => {

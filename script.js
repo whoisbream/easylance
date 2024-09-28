@@ -715,24 +715,19 @@ function submitAnswers() {
   pages.forEach((page) => {
     if (page.type === "quiz" || page.type === "choice") {
       if (page.typeInput === "radio") {
-        // Überprüfen, ob es eine „Інша відповідь“-Option gibt
         const isOtherOption = page.options.some((option) =>
           option.startsWith("Інша відповідь:")
         );
 
         if (isOtherOption) {
-          // Überprüfen, ob die andere Antwort ausgewählt wurde
           if (answers[page.name] && page.options.includes(answers[page.name])) {
-            // Standardoption wurde ausgewählt
             quizAnswers[page.name] = answers[page.name] || "";
           } else if (answers[`${page.name}_other`]) {
-            // Andere Antwort wurde ausgewählt und ausgefüllt
             quizAnswers[page.name] = answers[`${page.name}_other`];
           } else {
             quizAnswers[page.name] = "";
           }
         } else {
-          // Normale Radio-Optionen
           quizAnswers[page.name] = answers[page.name] || "";
         }
       } else if (page.typeInput === "text") {
@@ -752,7 +747,7 @@ function submitAnswers() {
     }
   });
 
-  console.log(quizAnswers);
+  console.log("Sending quizAnswers:", quizAnswers);
 
   fetch(scriptURL, {
     method: "POST",
@@ -761,19 +756,29 @@ function submitAnswers() {
     },
     body: JSON.stringify(quizAnswers),
   })
-    .then(() => {
-      const endPageIndex = pages.findIndex((p) => p.type === "end");
-      if (endPageIndex !== -1) {
-        currentPage = endPageIndex;
-        renderPage(currentPage);
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Success:", data);
+      if (data.status === "success") {
+        const endPageIndex = pages.findIndex((p) => p.type === "end");
+        if (endPageIndex !== -1) {
+          currentPage = endPageIndex;
+          renderPage(currentPage);
+        } else {
+          resultDiv.innerText = "Danke für deine Teilnahme!";
+          quizContainer.innerHTML = "";
+        }
       } else {
-        resultDiv.innerText = "Danke für deine Teilnahme!";
-        quizContainer.innerHTML = ""; // Nur den Quiz-Inhalt leeren
-        // Da die Navigation jetzt Teil jeder Seite ist, musst du hier nichts mehr ausblenden
+        throw new Error(`Server error: ${data.message}`);
       }
     })
     .catch((error) => {
-      console.error("Fehler:", error);
+      console.error("Fehler beim Absenden der Antworten:", error);
       resultDiv.innerText = "Es gab einen Fehler. Bitte versuche es erneut.";
     });
 }

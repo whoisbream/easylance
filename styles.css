@@ -41,7 +41,6 @@ select {
   justify-content: center;
   top: 0;
   width: 100%;
-  transition: transform 0.3s ease;
 }
 
 .background img {

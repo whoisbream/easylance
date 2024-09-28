@@ -6,7 +6,7 @@ let currentPage = 0;
 const answers = {};
 
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbz9DRTF4PE9pmhGDDNvUP-3BvAOgz2WagweYQaoV7bEyn05hPzT3h4AWXMA_ctpDTSA/exec";
+  "https://script.google.com/macros/s/AKfycbzF9E5fWWswjQhHjHz_jCDXDG4cVVVs1_q15ssbnG6puQ_uer-817CjBXP7lS18zUdM/exec";
 
 const quizContainer = document.getElementById("quiz-container");
 const prevBtn = document.getElementById("prevBtn");

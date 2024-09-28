@@ -762,9 +762,6 @@ function submitAnswers() {
     // Keine Header setzen
   })
     .then((response) => {
-      const endPageIndex = pages.findIndex((p) => p.type === "end");
-      currentPage = endPageIndex;
-      renderPage(currentPage);
       if (!response.ok) {
         throw new Error(`Server error: ${response.statusText}`);
       }
@@ -774,6 +771,10 @@ function submitAnswers() {
       console.error("Fehler beim Absenden der Antworten:", error);
       resultDiv.innerText = "Es gab einen Fehler. Bitte versuche es erneut.";
     });
+
+  const endPageIndex = pages.findIndex((p) => p.type === "end");
+  currentPage = endPageIndex;
+  renderPage(currentPage);
 }
 
 renderPage(currentPage);

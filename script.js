@@ -762,25 +762,13 @@ function submitAnswers() {
     // Keine Header setzen
   })
     .then((response) => {
+      const endPageIndex = pages.findIndex((p) => p.type === "end");
+      currentPage = endPageIndex;
+      renderPage(currentPage);
       if (!response.ok) {
         throw new Error(`Server error: ${response.statusText}`);
       }
       return response.json();
-    })
-    .then((data) => {
-      console.log("Success:", data);
-      if (data.result === "success") {
-        const endPageIndex = pages.findIndex((p) => p.type === "end");
-        if (endPageIndex !== -1) {
-          currentPage = endPageIndex;
-          renderPage(currentPage);
-        } else {
-          resultDiv.innerText = "Danke für deine Teilnahme!";
-          quizContainer.innerHTML = "";
-        }
-      } else {
-        throw new Error(`Server error: ${data.message}`);
-      }
     })
     .catch((error) => {
       console.error("Fehler beim Absenden der Antworten:", error);

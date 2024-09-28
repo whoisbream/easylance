@@ -6,7 +6,7 @@ let currentPage = 0;
 const answers = {};
 
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbzF9E5fWWswjQhHjHz_jCDXDG4cVVVs1_q15ssbnG6puQ_uer-817CjBXP7lS18zUdM/exec";
+  "https://script.google.com/macros/s/AKfycbzszdlo-s-rKfd5iNs4FAJNG3LvmnYZYVO6VFGniyVdC2j2KOQbAJyVGeq_p07a-iqX/exec";
 
 const quizContainer = document.getElementById("quiz-container");
 const prevBtn = document.getElementById("prevBtn");
@@ -739,7 +739,7 @@ function submitAnswers() {
         }
       } else if (page.typeInput === "arbeitszeiten") {
         quizAnswers[page.name] = answers[page.name] || "";
-        if (answers[page.name] === "З ___ до ___") {
+        if (answers[page.name] === "feste_zeiten") {
           quizAnswers[`${page.name}_von`] = answers[`${page.name}_von`] || "";
           quizAnswers[`${page.name}_bis`] = answers[`${page.name}_bis`] || "";
         }
@@ -749,12 +749,14 @@ function submitAnswers() {
 
   console.log("Sending quizAnswers:", quizAnswers);
 
-  fetch(scriptURL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(quizAnswers),
+  // Erstellen der URL mit Query-Parametern
+  const queryParams = new URLSearchParams(quizAnswers).toString();
+  const requestURL = `${scriptURL}?${queryParams}`;
+
+  // Senden der GET-Anfrage ohne zusätzliche Header
+  fetch(requestURL, {
+    method: "GET",
+    // Keine Header setzen
   })
     .then((response) => {
       if (!response.ok) {
@@ -764,7 +766,7 @@ function submitAnswers() {
     })
     .then((data) => {
       console.log("Success:", data);
-      if (data.status === "success") {
+      if (data.result === "success") {
         const endPageIndex = pages.findIndex((p) => p.type === "end");
         if (endPageIndex !== -1) {
           currentPage = endPageIndex;
@@ -784,3 +786,11 @@ function submitAnswers() {
 }
 
 renderPage(currentPage);
+
+fetch(scriptURL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: { q1: "abba" },
+});

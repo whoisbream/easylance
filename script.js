@@ -310,8 +310,7 @@ async function renderPage(index) {
         label.setAttribute("for", `${page.name}_${option}`);
         label.textContent = option + ": ";
 
-        const input = document.createElement("input");
-        input.type = "text";
+        const input = document.createElement("textarea");
         input.name = `${page.name}_${option}`;
         input.id = `${page.name}_${option}`;
         input.value = answers[`${page.name}_${option}`] || "";
@@ -629,8 +628,9 @@ function handleNextButtonClick() {
       let allFilled = true;
       current.optionen.forEach((option) => {
         const inputName = `${current.name}_${option}`;
-        const inputField = document.querySelector(`input[name="${inputName}"]`);
-        if (inputField && inputField.value.trim() !== "") {
+        // Suche nach <input> oder <textarea> mit dem entsprechenden Namen
+        const inputField = document.querySelector(`[name="${inputName}"]`);
+        if (inputField) {
           answers[inputName] = inputField.value.trim();
         } else {
           allFilled = false;

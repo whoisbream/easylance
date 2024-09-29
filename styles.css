@@ -270,8 +270,9 @@ label.option-label.selected {
   margin-left: 10px;
 }
 
-.input-field input {
+.input-field textarea {
   width: 100%;
+  padding-top: 16px;
   box-sizing: border-box;
   padding-left: 20px;
   padding-right: 20px;
@@ -281,11 +282,11 @@ label.option-label.selected {
   background-color: rgb(246, 232, 232);
 }
 
-.input-field input::placeholder {
+.input-field textarea::placeholder {
   margin-left: 10px !important;
 }
 
-.input-field input:focus {
+.input-field textarea:focus {
   outline: none;
   background-color: rgb(215, 196, 196);
 }

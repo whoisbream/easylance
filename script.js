@@ -6,7 +6,7 @@ let currentPage = 0;
 const answers = {};
 
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbzyMoNJoiaRvnxNru2m5DYrggHcHKGPVUQm-AzB6jqnoXdDfUjXxYgjK4fr2iak2abd/exec";
+  "https://script.google.com/macros/s/AKfycbwPJyfEiCSps6ptOoZ7FkS6j9DTKvbak0znj6Z_16eBdnYKAJqqYNenkiZeVA_CJX9U/exec";
 
 const quizContainer = document.getElementById("quiz-container");
 const prevBtn = document.getElementById("prevBtn");
@@ -39,7 +39,7 @@ async function insertIcon(button, iconName) {
  * @param {HTMLElement} navigationDiv - Das Navigations-Element, in dem der Button enthalten ist.
  * @param {string} [buttonText] - Optionaler Text für den Button. Standard ist "Weiter".
  */
-function resetNextButton(navigationDiv, buttonText = "Weiter") {
+function resetNextButton(navigationDiv, buttonText = "Далі") {
   const nextBtn = navigationDiv.querySelector("#nextBtn");
   nextBtn.textContent = buttonText;
   nextBtn.style.display = "inline-block";
@@ -131,11 +131,28 @@ function getNextPageIndex(currentIndex) {
       case "Так, але вона поки не потребує виконання":
         nextIndex = pages.findIndex((page) => page.name === "q4b");
         break;
-      case "Так, але не хочу працювати з початківцями":
-        nextIndex = pages.findIndex((page) => page.name === "q4c");
+      default:
+        nextIndex = pages.findIndex((page) => page.name === "q4с");
+        break;
+    }
+
+    if (nextIndex === -1) {
+      console.error(`Страниця не знайдена`);
+      return currentIndex + 1;
+    }
+
+    return nextIndex;
+  }
+
+  if (currentPageObj.name === "q5bef") {
+    const answer = answers[currentPageObj.name];
+    let nextIndex;
+    switch (answer) {
+      case "Ні":
+        nextIndex = pages.findIndex((page) => page.name === "q5befno");
         break;
       default:
-        nextIndex = pages.findIndex((page) => page.name === "q4d");
+        nextIndex = pages.findIndex((page) => page.name === "q5");
         break;
     }
 
@@ -148,7 +165,7 @@ function getNextPageIndex(currentIndex) {
   }
 
   if (currentPageObj.name?.startsWith("q4")) {
-    return pages.findIndex((page) => page.name === "q5");
+    return pages.findIndex((page) => page.name === "q5bef");
   }
 
   if (currentIndex < pages.length - 1) {
@@ -210,37 +227,30 @@ async function renderPage(index) {
         input.value = option;
         input.required = true;
 
-        // Überprüfen, ob die Option eine „Інша відповідь“ ist
         const isOtherOption = option.startsWith("Інша відповідь:");
 
-        // Event Listener für den Radio-Button nur für "Інша відповідь"
         if (isOtherOption) {
-          // Erstelle das Eingabefeld
           const textInput = document.createElement("input");
+          textInput.classList.add("another-option");
           textInput.type = "text";
           textInput.name = `${page.name}_other`;
-          textInput.placeholder = "Введіть вашу відповідь...";
 
-          // Setze den gespeicherten Wert, falls vorhanden
           if (answers[`${page.name}_other`]) {
             textInput.value = answers[`${page.name}_other`];
           } else {
-            textInput.disabled = true; // Deaktiviere das Eingabefeld standardmäßig
+            textInput.disabled = true;
           }
 
-          // Event Listener für das Eingabefeld
           textInput.addEventListener("input", (event) => {
             answers[`${page.name}_other`] = event.target.value.trim();
           });
 
-          // Event Listener für den Radio-Button
           input.addEventListener("change", () => {
             const allLabels =
               optionsContainer.querySelectorAll(".option-label");
             allLabels.forEach((lbl) => lbl.classList.remove("selected"));
             label.classList.add("selected");
 
-            // Aktiviere oder deaktiviere das Eingabefeld basierend auf der Auswahl
             if (input.checked) {
               textInput.disabled = false;
               textInput.focus();
@@ -258,7 +268,6 @@ async function renderPage(index) {
           span.appendChild(textInput);
           label.appendChild(span);
         } else {
-          // Event Listener für den Radio-Button ohne "Інша відповідь"
           input.addEventListener("change", () => {
             const allLabels =
               optionsContainer.querySelectorAll(".option-label");
@@ -363,13 +372,9 @@ async function renderPage(index) {
         const span = document.createElement("span");
 
         if (option === "З ___ до ___") {
-          console.log("HIIII");
-          // Erstelle das Label mit den Zeitfeldern direkt darin
           span.textContent = "З ";
 
-          // Erstelle 'von' Select-Element
           selectVon = createTimeSelect(`${page.name}_von`);
-          // Setze den gespeicherten Wert, falls vorhanden
           const savedVonValue = answers[`${page.name}_von`];
           if (savedVonValue) {
             selectVon.value = savedVonValue;
@@ -378,17 +383,14 @@ async function renderPage(index) {
 
           span.appendChild(document.createTextNode(" до "));
 
-          // Erstelle 'bis' Select-Element
           selectBis = createTimeSelect(`${page.name}_bis`);
 
-          // Setze den gespeicherten Wert, falls vorhanden
           const savedBisValue = answers[`${page.name}_bis`];
           if (savedBisValue) {
             selectBis.value = savedBisValue;
           }
           span.appendChild(selectBis);
 
-          // Disable the time selects if this option is not selected
           if (answers[page.name] !== option) {
             selectVon.disabled = true;
             selectBis.disabled = true;
@@ -397,10 +399,8 @@ async function renderPage(index) {
             selectBis.disabled = false;
           }
         } else {
-          // Für andere Optionen
           span.textContent = option;
 
-          // Deaktiviere die Zeitfelder, falls eine andere Option ausgewählt ist
           if (answers[page.name] !== "З ___ до ___") {
             if (selectVon) selectVon.disabled = true;
             if (selectBis) selectBis.disabled = true;
@@ -409,14 +409,11 @@ async function renderPage(index) {
 
         label.appendChild(span);
 
-        // Füge das Label dem optionsContainer hinzu
         optionsContainer.appendChild(label);
       });
 
-      // Füge den optionsContainer dem pageDiv hinzu
       pageDiv.appendChild(optionsContainer);
 
-      // Hilfsfunktion zum Erstellen der Zeitfelder
       function createTimeSelect(name) {
         const select = document.createElement("select");
         select.classList.add("custom-select");
@@ -427,7 +424,6 @@ async function renderPage(index) {
           `Select "${name}" erstellt. Disabled-Status: ${select.disabled}`
         );
 
-        // Optionen von 00:00 bis 23:30 in 30-Minuten-Intervallen
         for (let hour = 0; hour < 24; hour++) {
           for (let minute = 0; minute < 60; minute += 30) {
             const time = `${String(hour).padStart(2, "0")}:${String(
@@ -440,12 +436,10 @@ async function renderPage(index) {
           }
         }
 
-        // Setze den gespeicherten Wert, falls vorhanden
         if (answers[name]) {
           select.value = answers[name];
         }
 
-        // Event-Listener hinzufügen
         select.addEventListener("change", (event) => {
           console.log(`Select ${name} geändert zu: ${event.target.value}`);
           answers[name] = event.target.value;
@@ -557,7 +551,7 @@ async function renderPage(index) {
     console.log("End page: Hiding nextBtn");
   } else {
     removeChoiceButtons(navigationDiv);
-    resetNextButton(navigationDiv, page.buttonText || "Weiter");
+    resetNextButton(navigationDiv, page.buttonText || "Далі");
     console.log("Displaying nextBtn with text:", nextBtn.textContent);
   }
 
@@ -701,6 +695,12 @@ prevBtn.addEventListener("click", () => {
   const current = pages[currentPage];
   if (current.type === "end") {
     currentPage = 0;
+    renderPage(currentPage);
+  } else if (pages[currentPage]?.name?.startsWith("q4")) {
+    currentPage = pages.findIndex((page) => page.name === "q3");
+    renderPage(currentPage);
+  } else if (pages[currentPage]?.name === "q5") {
+    currentPage = pages.findIndex((page) => page.name === "q5bef");
     renderPage(currentPage);
   } else if (currentPage > 0) {
     currentPage--;

@@ -65,7 +65,8 @@ select {
 .container {
   position: relative;
   max-width: 400px;
-  height: 100%;
+  box-sizing: border-box;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -77,12 +78,13 @@ select {
 }
 
 #quiz-container {
-  margin-top: 30px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  min-height: 100vh;
   width: 70%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  height: 100%;
   justify-content: space-between;
 }
 
@@ -117,7 +119,6 @@ h1 {
   justify-content: space-around;
   width: 100%;
   gap: 20px;
-  margin-bottom: 50px;
 }
 
 .page.active {
@@ -136,7 +137,7 @@ h1 {
   border: none;
   border-radius: 50px;
   cursor: pointer;
-  width: 200px;
+  width: 230px;
   height: 70px;
   font-size: 1.4em;
   font-weight: 600;
@@ -235,6 +236,23 @@ label.option-label.selected {
   align-items: center;
   gap: 20px;
   width: 100%;
+}
+
+.another-option {
+  background-color: rgb(246, 232, 232);
+  border: none;
+  border-bottom: black 1px solid;
+  width: 100px;
+}
+
+.option-label.selected .another-option {
+  background-color: rgb(215, 196, 196);
+}
+
+.option-label.selected .another-option {
+  outline: none;
+  border: none;
+  border-bottom: black 1px solid;
 }
 
 .input-field {

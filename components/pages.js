@@ -210,7 +210,7 @@ export const pages = [
     question: "Твій бюджет",
     typeInput: "slider",
     min: 0,
-    max: 1000000,
+    max: 100000,
     step: 500,
     unit: "грн",
     icon: "budget-icon",

@@ -702,6 +702,19 @@ prevBtn.addEventListener("click", () => {
   } else if (pages[currentPage]?.name === "q5") {
     currentPage = pages.findIndex((page) => page.name === "q5bef");
     renderPage(currentPage);
+  } else if (pages[currentPage]?.name === "q5bef") {
+    const answer = answers["q3"];
+    let nextPage = pages.findIndex((page) => page.name === "q4a");
+    switch (answer) {
+      case "Так, але вона поки не потребує виконання":
+        nextPage = pages.findIndex((page) => page.name === "q4b");
+        break;
+      case "Hi":
+        nextPage = pages.findIndex((page) => page.name === "q4c");
+        break;
+    }
+    currentPage = nextPage;
+    renderPage(currentPage);
   } else if (currentPage > 0) {
     currentPage--;
     renderPage(currentPage);
